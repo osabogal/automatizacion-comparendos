@@ -14,6 +14,7 @@ if (!numeroIdentificacion || !fechaExpedicion) {
 // distintos uno tras otro, ej. en un bucle para varias cédulas).
 const MIN_DELAY_BETWEEN_RUNS_MS = 8000;
 const LOCK_FILE = path.join(__dirname, '.ultima-consulta-rnmc.lock');
+const SCREENSHOTS_DIR = path.join(__dirname, 'screenshots');
 
 const USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
@@ -97,6 +98,12 @@ async function consultar(intento = 1) {
     if (/captcha/i.test(resultado) || /acceso denegado|bloqueado|too many requests/i.test(resultado)) {
       throw new BloqueoDetectadoError('El sitio respondió con una señal de bloqueo (captcha / acceso denegado).');
     }
+
+    fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const screenshotPath = path.join(SCREENSHOTS_DIR, `rnmc-${numeroIdentificacion}-${timestamp}.png`);
+    await page.screenshot({ path: screenshotPath, fullPage: true });
+    console.log(`Captura guardada en ${screenshotPath}`);
 
     console.log(resultado);
     return resultado;
