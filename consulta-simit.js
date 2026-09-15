@@ -11,7 +11,10 @@ if (!identificacion) {
 // --- Config anti-bloqueo (mismo criterio que consulta-rnmc.js) ---
 const MIN_DELAY_BETWEEN_RUNS_MS = 8000;
 const LOCK_FILE = path.join(__dirname, '.ultima-consulta-simit.lock');
+const MUTEX_FILE = `${LOCK_FILE}.mutex`;
+const MUTEX_MAX_WAIT_MS = 15000;
 const SCREENSHOTS_DIR = path.join(__dirname, 'screenshots');
+const HEADLESS = process.env.HEADLESS ? process.env.HEADLESS !== 'false' : false;
 
 const USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
@@ -39,22 +42,51 @@ function randomDelay(minMs, maxMs) {
   return delay(Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs);
 }
 
+// Lock exclusivo entre procesos (creación atómica con 'wx') para que leer y
+// actualizar LOCK_FILE sea una sección crítica real: si dos procesos se lanzan
+// casi al mismo tiempo (ej. un bucle externo consultando varias cédulas), no
+// pueden leer el mismo timestamp y arrancar juntos.
+async function conMutex(fn) {
+  const inicio = Date.now();
+  for (;;) {
+    try {
+      fs.writeFileSync(MUTEX_FILE, String(process.pid), { flag: 'wx' });
+      break;
+    } catch (err) {
+      if (err.code !== 'EEXIST') throw err;
+      if (Date.now() - inicio > MUTEX_MAX_WAIT_MS) {
+        // Mutex probablemente huérfano (proceso anterior murió sin liberarlo).
+        try { fs.unlinkSync(MUTEX_FILE); } catch {}
+        continue;
+      }
+      await delay(100);
+    }
+  }
+  try {
+    return await fn();
+  } finally {
+    try { fs.unlinkSync(MUTEX_FILE); } catch {}
+  }
+}
+
 // Igual que en consulta-rnmc.js: si el script se corre varias veces seguidas
 // (ej. varias cédulas en fila), obliga a esperar entre una ejecución y la
 // siguiente para no generar ráfagas de tráfico.
 async function esperarTurno() {
-  try {
-    const ultima = Number(fs.readFileSync(LOCK_FILE, 'utf8'));
-    const transcurrido = Date.now() - ultima;
-    if (transcurrido < MIN_DELAY_BETWEEN_RUNS_MS) {
-      const espera = MIN_DELAY_BETWEEN_RUNS_MS - transcurrido;
-      console.log(`Esperando ${Math.ceil(espera / 1000)}s antes de consultar (evita ráfagas de peticiones)...`);
-      await delay(espera);
+  await conMutex(async () => {
+    try {
+      const ultima = Number(fs.readFileSync(LOCK_FILE, 'utf8'));
+      const transcurrido = Date.now() - ultima;
+      if (transcurrido < MIN_DELAY_BETWEEN_RUNS_MS) {
+        const espera = MIN_DELAY_BETWEEN_RUNS_MS - transcurrido;
+        console.log(`Esperando ${Math.ceil(espera / 1000)}s antes de consultar (evita ráfagas de peticiones)...`);
+        await delay(espera);
+      }
+    } catch {
+      // No existe el archivo aún (primera ejecución): no hay que esperar.
     }
-  } catch {
-    // No existe el archivo aún (primera ejecución): no hay que esperar.
-  }
-  fs.writeFileSync(LOCK_FILE, String(Date.now()));
+    fs.writeFileSync(LOCK_FILE, String(Date.now()));
+  });
 }
 
 function verificarBloqueo(texto) {
@@ -64,7 +96,7 @@ function verificarBloqueo(texto) {
 }
 
 async function consultar(intento = 1) {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: HEADLESS });
   try {
     const context = await browser.newContext({
       userAgent: pick(USER_AGENTS),
