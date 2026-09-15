@@ -1,0 +1,31 @@
+{
+  "rnmc": [
+    {
+      "nombre": "caso1",
+      "cedula": "REDACTED-ID",
+      "fechaExpedicion": "REDACTED-FECHA",
+      "descripcion": "Reemplazar por una cédula y fecha reales que estés autorizado a consultar"
+    }
+  ],
+  "comparendos": [
+    {
+      "nombre": "caso1",
+      "cedula": "1000000000",
+      "descripcion": "Reemplazar por una cédula real que estés autorizado a consultar"
+    }
+  ],
+  "antecedentes": [
+    {
+      "nombre": "caso1",
+      "cedula": "1000000000",
+      "descripcion": "Requiere la variable ANTHROPIC_API_KEY en el entorno. Reemplazar cédula antes de correr"
+    }
+  ],
+  "simit": [
+    {
+      "nombre": "caso1",
+      "cedula": "REDACTED-ID",
+      "descripcion": "Reemplazar por una cédula real que estés autorizado a consultar"
+    }
+  ]
+}

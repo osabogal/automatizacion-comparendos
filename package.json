@@ -4,7 +4,11 @@
   "description": "",
   "main": "consulta-comparendos.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/run-caso.js",
+    "test:rnmc": "node tests/run-caso.js rnmc",
+    "test:comparendos": "node tests/run-caso.js comparendos",
+    "test:antecedentes": "node tests/run-caso.js antecedentes",
+    "test:simit": "node tests/run-caso.js simit"
   },
   "repository": {
     "type": "git",
