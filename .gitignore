@@ -1,3 +1,4 @@
 node_modules/
 .ultima-consulta-*.lock
+.ultima-consulta-*.lock.mutex
 screenshots/
