@@ -2,8 +2,8 @@
   "rnmc": [
     {
       "nombre": "caso1",
-      "cedula": "REDACTED-ID",
-      "fechaExpedicion": "REDACTED-FECHA",
+      "cedula": "1000000000",
+      "fechaExpedicion": "01/01/2020",
       "descripcion": "Reemplazar por una cédula y fecha reales que estés autorizado a consultar"
     }
   ],
@@ -24,7 +24,7 @@
   "simit": [
     {
       "nombre": "caso1",
-      "cedula": "REDACTED-ID",
+      "cedula": "1000000000",
       "descripcion": "Reemplazar por una cédula real que estés autorizado a consultar"
     }
   ]

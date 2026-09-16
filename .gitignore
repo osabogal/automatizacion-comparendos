@@ -2,3 +2,4 @@ node_modules/
 .ultima-consulta-*.lock
 .ultima-consulta-*.lock.mutex
 screenshots/
+tests/casos.local.json

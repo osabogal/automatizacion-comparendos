@@ -8,7 +8,8 @@
     "test:rnmc": "node tests/run-caso.js rnmc",
     "test:comparendos": "node tests/run-caso.js comparendos",
     "test:antecedentes": "node tests/run-caso.js antecedentes",
-    "test:simit": "node tests/run-caso.js simit"
+    "test:simit": "node tests/run-caso.js simit",
+    "test:acreditado": "node tests/run-caso.js acreditado"
   },
   "repository": {
     "type": "git",

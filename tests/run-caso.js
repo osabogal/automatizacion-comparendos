@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const CASOS_PATH = path.join(__dirname, 'casos.json');
+const CASOS_LOCAL_PATH = path.join(__dirname, 'casos.local.json');
 
 const SCRIPTS = {
   rnmc: {
@@ -26,8 +27,33 @@ const SCRIPTS = {
     archivo: 'consulta-simit.js',
     requiere: ['cedula'],
     env: { NUMERO_IDENTIFICACION: 'cedula' }
+  },
+  acreditado: {
+    archivo: 'consulta-personal-acreditado.js',
+    requiere: ['cedula'],
+    env: { NUMERO_IDENTIFICACION: 'cedula' }
   }
 };
+
+// tests/casos.local.json es opcional y está en .gitignore: sirve para casos con
+// cédulas reales que no deben subirse al repo público. Los casos locales se
+// agregan a (o reemplazan por nombre a) los de casos.json.
+function cargarCasos() {
+  const casos = JSON.parse(fs.readFileSync(CASOS_PATH, 'utf8'));
+  if (!fs.existsSync(CASOS_LOCAL_PATH)) return casos;
+
+  const casosLocales = JSON.parse(fs.readFileSync(CASOS_LOCAL_PATH, 'utf8'));
+  for (const [tipo, lista] of Object.entries(casosLocales)) {
+    const base = casos[tipo] || [];
+    for (const casoLocal of lista) {
+      const idx = base.findIndex(c => c.nombre === casoLocal.nombre);
+      if (idx >= 0) base[idx] = casoLocal;
+      else base.push(casoLocal);
+    }
+    casos[tipo] = base;
+  }
+  return casos;
+}
 
 const [, , tipo, nombreCaso] = process.argv;
 
@@ -35,7 +61,7 @@ function listarYSalir(mensaje) {
   if (mensaje) console.error(mensaje + '\n');
   console.log('Uso: node tests/run-caso.js <tipo> [nombre-caso]');
   console.log('Tipos disponibles:', Object.keys(SCRIPTS).join(', '));
-  const casos = JSON.parse(fs.readFileSync(CASOS_PATH, 'utf8'));
+  const casos = cargarCasos();
   for (const t of Object.keys(casos)) {
     console.log(`\n${t}:`);
     casos[t].forEach(c => console.log(`  - ${c.nombre}: ${c.descripcion || ''}`));
@@ -48,7 +74,7 @@ if (!tipo || !SCRIPTS[tipo]) {
 }
 
 const config = SCRIPTS[tipo];
-const todosCasos = JSON.parse(fs.readFileSync(CASOS_PATH, 'utf8'))[tipo] || [];
+const todosCasos = cargarCasos()[tipo] || [];
 const caso = nombreCaso ? todosCasos.find(c => c.nombre === nombreCaso) : todosCasos[0];
 
 if (!caso) {
