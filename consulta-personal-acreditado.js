@@ -1,6 +1,12 @@
 const { chromium } = require('playwright');
 
-const identificacion = process.env.NUMERO_IDENTIFICACION || 'REDACTED-ID';
+const identificacion = process.env.NUMERO_IDENTIFICACION;
+
+if (!identificacion) {
+  console.error('Error: define la variable de entorno NUMERO_IDENTIFICACION antes de ejecutar el script.');
+  process.exit(1);
+}
+
 const url = 'https://apo.supervigilancia.gov.co/acreditapo/BuscaPersona.aspx';
 
 (async () => {
